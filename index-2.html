@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#080b18">
+<meta name="description" content="MIND RUSH — a fast-paced neon math arcade game. Think fast. Move smart.">
+<title>MIND RUSH — Think Fast. Move Smart.</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #080b18;
+    --panel: rgba(17, 23, 44, .88);
+    --panel-2: rgba(21, 29, 54, .9);
+    --border: rgba(148, 174, 230, .16);
+    --cyan: #54f3ff;
+    --purple: #aa83ff;
+    --text: #f5f7ff;
+    --muted: #96a3c4;
+    --green: #70f6c3;
+    --amber: #ffca73;
+    --danger: #ff648a;
+  }
+  * { box-sizing: border-box; }
+  html { min-width: 320px; background: var(--bg); }
+  body {
+    margin: 0; min-height: 100vh; color: var(--text);
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background:
+      radial-gradient(ellipse at 15% 0%, rgba(74, 78, 177, .19), transparent 37rem),
+      radial-gradient(ellipse at 100% 45%, rgba(34, 178, 202, .09), transparent 34rem),
+      var(--bg);
+    overflow-x: hidden;
+  }
+  button { font: inherit; }
+  button:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+  .app { width: min(1160px, 100%); margin: 0 auto; padding: 22px 26px 28px; }
+  .topbar { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:18px; }
+  .brand { display:flex; align-items:center; gap:12px; min-width:0; }
+  .brand-mark {
+    width:44px; height:44px; display:grid; place-items:center; border-radius:14px;
+    border:1px solid rgba(84,243,255,.45); color:var(--cyan);
+    background:linear-gradient(140deg, rgba(84,243,255,.15), rgba(170,131,255,.13));
+    box-shadow:0 0 27px rgba(84,243,255,.09), inset 0 0 18px rgba(84,243,255,.06);
+    font-weight:900; font-size:21px; letter-spacing:-2px;
+  }
+  .brand-copy { line-height:1.05; }
+  .brand-title { font-size:17px; font-weight:900; letter-spacing:.16em; }
+  .brand-subtitle { margin-top:6px; font-size:10px; color:var(--muted); letter-spacing:.18em; text-transform:uppercase; }
+  .top-tag { display:flex; align-items:center; gap:8px; padding:8px 11px; color:#b9c7e8; border:1px solid var(--border); border-radius:999px; background:rgba(13,18,35,.55); font-size:11px; letter-spacing:.1em; text-transform:uppercase; white-space:nowrap; }
+  .live-dot { width:7px; height:7px; background:var(--green); border-radius:50%; box-shadow:0 0 11px var(--green); }
+  .hud { padding:16px; background:linear-gradient(120deg, rgba(18,25,48,.9), rgba(14,19,38,.84)); border:1px solid var(--border); border-radius:20px; box-shadow:0 18px 50px rgba(0,0,0,.13); }
+  .hud-grid { display:grid; grid-template-columns:1fr 1fr 1fr 1.3fr; gap:12px; }
+  .stat { padding:10px 13px; min-width:0; border:1px solid rgba(140,162,213,.12); border-radius:13px; background:rgba(5,10,25,.36); }
+  .stat-label { display:block; margin-bottom:5px; color:var(--muted); font-size:10px; text-transform:uppercase; letter-spacing:.15em; }
+  .stat-value { display:flex; align-items:baseline; gap:6px; font-size:23px; line-height:1.1; font-weight:780; letter-spacing:-.04em; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .stat-unit { color:#8290b5; font-size:11px; font-weight:600; letter-spacing:0; }
+  #scoreValue { color:var(--cyan); text-shadow:0 0 20px rgba(84,243,255,.18); }
+  #questionValue { color:#f5f7ff; }
+  #stageValue { color:var(--purple); font-size:19px; }
+  #timeValue { color:var(--green); }
+  .timer-track { height:5px; margin-top:11px; overflow:hidden; border-radius:8px; background:rgba(146,162,203,.13); }
+  .timer-fill { height:100%; width:100%; border-radius:inherit; background:linear-gradient(90deg, var(--cyan), #9e8cff); box-shadow:0 0 13px rgba(84,243,255,.36); transition:width .08s linear, background .2s ease; }
+  .timer-fill.warning { background:linear-gradient(90deg, var(--amber), var(--danger)); box-shadow:0 0 13px rgba(255,100,138,.3); }
+  .game-frame { margin-top:16px; border:1px solid rgba(133,156,212,.17); border-radius:22px; padding:12px; background:linear-gradient(145deg, rgba(20,28,53,.8), rgba(9,14,29,.91)); box-shadow:0 26px 72px rgba(0,0,0,.2); }
+  .arena-heading { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:3px 5px 11px; color:#8493b8; text-transform:uppercase; letter-spacing:.15em; font-size:10px; }
+  .arena-heading strong { color:#cad5f0; font-weight:700; }
+  .arena-heading .mini-status { color:var(--cyan); letter-spacing:.09em; }
+  .arena-clip { position:relative; overflow:hidden; border-radius:15px; border:1px solid rgba(84,243,255,.18); background:#0a1023; }
+  canvas { display:block; width:100%; height:clamp(300px, 42vh, 500px); touch-action:none; }
+  .arena-edge { pointer-events:none; position:absolute; inset:0; border-radius:15px; box-shadow:inset 0 0 50px rgba(0,0,0,.2); }
+  .question-card { display:flex; justify-content:space-between; align-items:center; gap:20px; margin-top:12px; padding:18px 20px; border:1px solid rgba(170,131,255,.24); border-radius:17px; background:linear-gradient(115deg, rgba(37,31,74,.47), rgba(16,24,47,.89) 52%, rgba(14,30,48,.82)); }
+  .question-kicker { margin-bottom:7px; color:#9ca9cc; font-size:10px; letter-spacing:.17em; text-transform:uppercase; }
+  .question-text { min-height:35px; font-size:clamp(23px,3vw,31px); font-weight:800; letter-spacing:-.04em; line-height:1.15; }
+  .question-right { display:flex; align-items:center; gap:12px; flex-shrink:0; }
+  .goal-chip { display:flex; align-items:center; gap:7px; padding:9px 11px; color:#cbd5f2; border:1px solid rgba(158,140,255,.24); border-radius:11px; background:rgba(142,112,255,.08); font-size:11px; white-space:nowrap; }
+  .goal-chip b { color:var(--purple); }
+  .progress-dots { display:flex; gap:4px; }
+  .progress-dots span { width:6px; height:20px; border-radius:5px; background:rgba(140,157,199,.17); }
+  .progress-dots span.done { background:var(--cyan); box-shadow:0 0 8px rgba(84,243,255,.32); }
+  .progress-dots span.bonus { background:var(--purple); box-shadow:0 0 8px rgba(170,131,255,.32); }
+  .bottom-row { display:flex; justify-content:space-between; align-items:center; gap:15px; margin-top:12px; padding:0 4px; }
+  .keyboard-help { display:flex; align-items:center; flex-wrap:wrap; gap:8px; color:#8491b2; font-size:11px; }
+  kbd { display:inline-grid; place-items:center; min-width:23px; height:23px; padding:0 5px; border:1px solid rgba(149,169,220,.22); border-bottom-width:2px; border-radius:6px; background:rgba(20,29,52,.85); color:#d8e1f9; font:600 11px ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .touch-controls { display:none; grid-template-columns:repeat(3,38px); grid-template-rows:repeat(2,32px); gap:4px; }
+  .touch-btn { display:grid; place-items:center; border:1px solid rgba(84,243,255,.2); border-radius:8px; color:#c5faff; background:rgba(20,38,59,.9); font-size:16px; user-select:none; -webkit-user-select:none; touch-action:none; }
+  .touch-btn:active, .touch-btn.pressed { background:rgba(84,243,255,.23); border-color:var(--cyan); }
+  .touch-up { grid-column:2; grid-row:1; } .touch-left { grid-column:1; grid-row:2; } .touch-down { grid-column:2; grid-row:2; } .touch-right { grid-column:3; grid-row:2; }
+  .footer-note { color:#596786; font-size:10px; letter-spacing:.04em; text-align:right; }
+  .overlay { position:fixed; z-index:10; inset:0; display:grid; place-items:center; overflow-y:auto; padding:24px; background:rgba(4,7,17,.8); backdrop-filter:blur(13px); -webkit-backdrop-filter:blur(13px); }
+  .overlay[hidden] { display:none; }
+  .modal { position:relative; width:min(590px,100%); padding:32px; border:1px solid rgba(113,222,255,.3); border-radius:25px; background:radial-gradient(ellipse at 15% 0%, rgba(80,85,179,.21), transparent 60%), linear-gradient(145deg, rgba(20,28,53,.98), rgba(10,15,31,.99)); box-shadow:0 28px 110px rgba(0,0,0,.5), 0 0 50px rgba(84,243,255,.06); }
+  .modal::before { content:""; position:absolute; top:-1px; left:32px; width:90px; height:2px; background:var(--cyan); box-shadow:0 0 18px var(--cyan); }
+  .eyebrow { display:flex; align-items:center; gap:8px; color:var(--cyan); font-size:10px; letter-spacing:.2em; font-weight:800; text-transform:uppercase; }
+  .modal h1 { margin:17px 0 9px; font-size:clamp(38px,8vw,58px); line-height:.98; letter-spacing:-.065em; }
+  .modal h1 span { color:var(--cyan); text-shadow:0 0 27px rgba(84,243,255,.2); }
+  .modal-lead { margin:0; color:#a7b4d5; line-height:1.6; font-size:14px; }
+  .instruction-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:23px 0; }
+  .instruction { min-height:82px; padding:13px; border:1px solid rgba(139,160,215,.15); border-radius:13px; background:rgba(5,10,25,.36); }
+  .instruction-icon { color:var(--purple); font-size:16px; margin-bottom:7px; }
+  .instruction strong { display:block; font-size:12px; margin-bottom:5px; }
+  .instruction p { margin:0; color:#8f9dbe; font-size:11px; line-height:1.5; }
+  .modal-note { margin:0 0 20px; padding-left:12px; border-left:2px solid var(--danger); color:#a2aecb; font-size:12px; line-height:1.55; }
+  .speed-setting { margin:0 0 18px; padding:13px 14px; border:1px solid rgba(139,160,215,.16); border-radius:13px; background:rgba(5,10,25,.34); }
+  .speed-setting-label { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; color:#cbd5f2; font-size:11px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; }
+  .speed-setting-label span:last-child { color:var(--cyan); font-size:10px; letter-spacing:.04em; }
+  .speed-options { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+  .speed-option { min-height:38px; border:1px solid rgba(139,160,215,.2); border-radius:10px; background:rgba(17,25,47,.82); color:#aab8d8; cursor:pointer; font-size:11px; font-weight:800; letter-spacing:.04em; transition:background .15s ease,border-color .15s ease,color .15s ease; }
+  .speed-option[aria-pressed="true"] { border-color:rgba(84,243,255,.72); background:rgba(84,243,255,.12); color:var(--cyan); box-shadow:inset 0 0 16px rgba(84,243,255,.05); }
+  .speed-option:hover { border-color:rgba(84,243,255,.5); }
+  .speed-setting-hint { margin:9px 0 0; color:#7f8eaf; font-size:10px; line-height:1.5; }
+  .primary-btn { display:flex; width:100%; min-height:51px; align-items:center; justify-content:center; gap:9px; padding:13px 18px; border:0; border-radius:13px; background:linear-gradient(100deg, #57ecf7, #8eafff); color:#07111f; font-weight:900; letter-spacing:.03em; cursor:pointer; box-shadow:0 8px 24px rgba(84,243,255,.16); transition:transform .16s ease, filter .16s ease, box-shadow .16s ease; }
+  .primary-btn:hover { transform:translateY(-2px); filter:brightness(1.07); box-shadow:0 12px 28px rgba(84,243,255,.22); }
+  .primary-btn:active { transform:translateY(0); }
+  .modal-small { margin-top:12px; color:#6f7da0; font-size:10px; text-align:center; }
+  .result-icon { display:grid; place-items:center; width:48px; height:48px; border:1px solid rgba(112,246,195,.27); border-radius:15px; background:rgba(112,246,195,.08); color:var(--green); font-size:24px; }
+  .result-icon.loss { border-color:rgba(255,100,138,.28); background:rgba(255,100,138,.08); color:var(--danger); }
+  .result-title { margin:18px 0 8px !important; font-size:clamp(34px,7vw,48px) !important; }
+  .result-title.win { color:var(--green); }
+  .result-title.loss { color:var(--danger); }
+  .result-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:9px; margin:24px 0 18px; }
+  .result-stat { padding:15px 11px; border:1px solid rgba(139,160,215,.15); border-radius:13px; background:rgba(4,9,23,.35); }
+  .result-stat span { display:block; margin-bottom:8px; color:#8795b7; font-size:9px; text-transform:uppercase; letter-spacing:.13em; }
+  .result-stat strong { font-size:21px; letter-spacing:-.04em; font-variant-numeric:tabular-nums; }
+  .result-message { margin:0 0 22px; color:#a7b4d5; font-size:13px; line-height:1.6; }
+  .celebration-ribbon { position:absolute; z-index:4; top:50%; left:50%; width:max-content; max-width:90%; transform:translate(-50%,-50%); padding:19px 27px; border:1px solid rgba(112,246,195,.5); border-radius:17px; background:rgba(8,21,32,.93); color:var(--green); font-weight:900; letter-spacing:.04em; text-align:center; box-shadow:0 0 60px rgba(112,246,195,.15); pointer-events:none; animation:celebrate-in .28s ease-out both; }
+  .celebration-ribbon small { display:block; margin-top:6px; color:#c2d4e7; font-size:11px; font-weight:500; letter-spacing:.02em; }
+  @keyframes celebrate-in { from { opacity:0; transform:translate(-50%,-44%) scale(.96); } to { opacity:1; transform:translate(-50%,-50%) scale(1); } }
+  .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+  @media (max-width:760px) {
+    .app { padding:15px 13px 20px; }
+    .top-tag { font-size:9px; padding:7px 9px; }
+    .hud { padding:10px; border-radius:16px; }
+    .hud-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+    .stat { padding:9px 11px; }
+    .stat-value { font-size:21px; }
+    .stat-label { font-size:9px; }
+    .game-frame { padding:8px; border-radius:17px; }
+    canvas { height:clamp(300px, 43vh, 430px); }
+    .question-card { padding:14px; gap:8px; align-items:flex-start; }
+    .question-right { flex-direction:column; align-items:flex-end; gap:8px; }
+    .goal-chip { padding:7px 8px; font-size:10px; }
+    .progress-dots { gap:3px; max-width:120px; flex-wrap:wrap; justify-content:flex-end; }
+    .progress-dots span { width:5px; height:12px; }
+    .bottom-row { align-items:flex-start; }
+    .touch-controls { display:grid; }
+    .footer-note { display:none; }
+    .keyboard-help { max-width:55%; font-size:10px; }
+  }
+  @media (max-width:440px) {
+    .brand-mark { width:38px; height:38px; border-radius:12px; }
+    .brand-title { font-size:14px; }
+    .brand-subtitle { font-size:8px; }
+    .top-tag { max-width:118px; white-space:normal; line-height:1.4; }
+    .question-text { font-size:22px; }
+    .goal-chip { white-space:normal; text-align:right; max-width:120px; }
+    .instruction-grid { gap:8px; margin:19px 0; }
+    .instruction { padding:10px; min-height:90px; }
+    .modal { padding:23px 20px; }
+    .overlay { padding:13px; }
+    .result-stats { gap:6px; }
+    .result-stat { padding:12px 8px; }
+    .result-stat strong { font-size:18px; }
+  }
+  @media (pointer: coarse) {
+    .touch-controls { display:grid; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration:.01ms !important; transition-duration:.01ms !important; scroll-behavior:auto !important; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">MR</div>
+      <div class="brand-copy">
+        <div class="brand-title">MIND RUSH</div>
+        <div class="brand-subtitle">Think fast. Move smart.</div>
+      </div>
+    </div>
+    <div class="top-tag"><span class="live-dot" aria-hidden="true"></span> Math arcade · 01</div>
+  </header>
+
+  <section class="hud" aria-label="Game statistics">
+    <div class="hud-grid">
+      <div class="stat"><span class="stat-label">Score</span><div class="stat-value"><span id="scoreValue">00</span><span class="stat-unit">/ 25</span></div></div>
+      <div class="stat"><span class="stat-label">Question</span><div class="stat-value"><span id="questionValue">01</span><span class="stat-unit">/ 25</span></div></div>
+      <div class="stat"><span class="stat-label">Stage</span><div class="stat-value" id="stageValue">EASY</div></div>
+      <div class="stat"><span class="stat-label">Time remaining</span><div class="stat-value"><span id="timeValue">60.0</span><span class="stat-unit">SEC</span></div><div class="timer-track" aria-hidden="true"><div class="timer-fill" id="timerFill"></div></div></div>
+    </div>
+  </section>
+
+  <main class="game-frame">
+    <div class="arena-heading"><span><strong>01</strong> / Catch zone</span><span class="mini-status" id="arenaStatus">Ready when you are</span></div>
+    <div class="arena-clip" id="arenaClip">
+      <canvas id="gameCanvas" aria-label="Game playfield. Move the boy with the arrow keys to catch the correct answer and avoid incorrect answers."></canvas>
+      <div class="arena-edge" aria-hidden="true"></div>
+      <div class="celebration-ribbon" id="celebrationRibbon" hidden>15 QUESTIONS CLEARED!<small>Bonus stage unlocked · Keep going!</small></div>
+    </div>
+    <section class="question-card" aria-label="Current math question">
+      <div>
+        <div class="question-kicker" id="questionKicker">Current equation</div>
+        <div class="question-text" id="questionText">Ready to test your reflexes?</div>
+      </div>
+      <div class="question-right">
+        <div class="goal-chip"><span aria-hidden="true">✦</span> Win target <b>15+</b></div>
+        <div class="progress-dots" id="progressDots" aria-label="Question progress"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="bottom-row">
+    <div class="keyboard-help" aria-label="Keyboard controls">
+      <span><kbd>←</kbd> <kbd>↑</kbd> <kbd>↓</kbd> <kbd>→</kbd></span><span>Move in any direction</span>
+    </div>
+    <div class="touch-controls" aria-label="Touch controls">
+      <button class="touch-btn touch-up" data-key="ArrowUp" aria-label="Move up">↑</button>
+      <button class="touch-btn touch-left" data-key="ArrowLeft" aria-label="Move left">←</button>
+      <button class="touch-btn touch-down" data-key="ArrowDown" aria-label="Move down">↓</button>
+      <button class="touch-btn touch-right" data-key="ArrowRight" aria-label="Move right">→</button>
+    </div>
+    <div class="footer-note">Quick thinking wins. One wrong catch ends the run.</div>
+  </footer>
+</div>
+
+<div class="overlay" id="startOverlay" role="dialog" aria-modal="true" aria-labelledby="startTitle">
+  <div class="modal">
+    <div class="eyebrow"><span class="live-dot" aria-hidden="true"></span> Reflexes meet arithmetic</div>
+    <h1 id="startTitle">MIND <span>RUSH</span></h1>
+    <p class="modal-lead">Answers are falling. Only one is right. Guide your character through the catch zone, grab the correct number, and keep moving.</p>
+    <div class="instruction-grid">
+      <div class="instruction"><div class="instruction-icon" aria-hidden="true">↔</div><strong>Move with purpose</strong><p>Use the arrow keys or the touch pad to move up, down, left, and right.</p></div>
+      <div class="instruction"><div class="instruction-icon" aria-hidden="true">◎</div><strong>Catch the right number</strong><p>Six answers look alike. Solve the equation, then intercept the correct value.</p></div>
+      <div class="instruction"><div class="instruction-icon" aria-hidden="true">◷</div><strong>60-second sprint</strong><p>The countdown keeps going as you move from one question to the next.</p></div>
+      <div class="instruction"><div class="instruction-icon" aria-hidden="true">✦</div><strong>Reach 15 to win</strong><p>Clear 15 questions to win, then keep going up to 25 for a perfect run.</p></div>
+    </div>
+    <p class="modal-note"><strong>Heads-up:</strong> Catch an incorrect answer and your run ends immediately. Letting an answer fall past you is safe — but you still need to catch the correct one.</p>
+    <section class="speed-setting" aria-label="Choose falling answer speed">
+      <div class="speed-setting-label"><span>Falling speed</span><span id="speedModeLabel">Relaxed · Recommended</span></div>
+      <div class="speed-options" role="group" aria-label="Falling speed options">
+        <button class="speed-option" type="button" data-speed-mode="relaxed" aria-pressed="true">RELAXED</button>
+        <button class="speed-option" type="button" data-speed-mode="normal" aria-pressed="false">NORMAL</button>
+        <button class="speed-option" type="button" data-speed-mode="fast" aria-pressed="false">FAST</button>
+      </div>
+      <p class="speed-setting-hint">Relaxed starts slower so you have more time to react. The falling speed still increases as you advance.</p>
+    </section>
+    <button class="primary-btn" id="startButton">START GAME <span aria-hidden="true">→</span></button>
+    <div class="modal-small">Original arcade challenge · No downloads or account required</div>
+  </div>
+</div>
+
+<div class="overlay" id="resultOverlay" role="dialog" aria-modal="true" aria-labelledby="resultTitle" hidden>
+  <div class="modal">
+    <div class="result-icon" id="resultIcon" aria-hidden="true">✦</div>
+    <div class="eyebrow" id="resultEyebrow">Run complete</div>
+    <h2 class="result-title win" id="resultTitle">YOU DID IT!</h2>
+    <p class="modal-lead" id="resultLead">Sharp thinking. Smooth moves.</p>
+    <div class="result-stats">
+      <div class="result-stat"><span>Final score</span><strong id="finalScore">00 / 25</strong></div>
+      <div class="result-stat"><span>Questions cleared</span><strong id="finalQuestions">00</strong></div>
+      <div class="result-stat"><span>Time left</span><strong id="finalTime">00.0s</strong></div>
+    </div>
+    <p class="result-message" id="resultMessage">A new run is one click away.</p>
+    <button class="primary-btn" id="restartButton">PLAY AGAIN <span aria-hidden="true">↻</span></button>
+    <div class="modal-small">Every run gets a fresh set of math questions.</div>
+  </div>
+</div>
+<div class="sr-only" id="announcer" aria-live="polite" aria-atomic="true"></div>
+
+<script>
+(() => {
+  'use strict';
+
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+  const arenaClip = document.getElementById('arenaClip');
+  const scoreValue = document.getElementById('scoreValue');
+  const questionValue = document.getElementById('questionValue');
+  const stageValue = document.getElementById('stageValue');
+  const timeValue = document.getElementById('timeValue');
+  const timerFill = document.getElementById('timerFill');
+  const questionText = document.getElementById('questionText');
+  const questionKicker = document.getElementById('questionKicker');
+  const arenaStatus = document.getElementById('arenaStatus');
+  const progressDots = document.getElementById('progressDots');
+  const celebrationRibbon = document.getElementById('celebrationRibbon');
+  const startOverlay = document.getElementById('startOverlay');
+  const resultOverlay = document.getElementById('resultOverlay');
+  const startButton = document.getElementById('startButton');
+  const restartButton = document.getElementById('restartButton');
+  const announcer = document.getElementById('announcer');
+  const speedModeLabel = document.getElementById('speedModeLabel');
+  const speedModeButtons = Array.from(document.querySelectorAll('[data-speed-mode]'));
+
+  const ROUND_SECONDS = 60;
+  const MAX_QUESTIONS = 25;
+  const WIN_TARGET = 15;
+  const keys = new Set();
+  const touchButtons = new Map();
+  const backgroundStars = Array.from({ length: 54 }, () => ({
+    x: Math.random(), y: Math.random(), r: Math.random() * 1.35 + 0.25,
+    phase: Math.random() * Math.PI * 2, speed: Math.random() * .8 + .2
+  }));
+
+  let state = 'START';
+  let width = 0;
+  let height = 0;
+  let dpr = 1;
+  let lastFrame = null;
+  let score = 0;
+  let remaining = ROUND_SECONDS;
+  let questions = [];
+  let activeQuestion = null;
+  let answers = [];
+  let player = { x: 0, y: 0, radius: 18, speed: 300, walkPhase: 0, lastDx: 1 };
+  let celebrationTime = 0;
+  let floatingFeedback = null;
+  let elapsed = 0;
+  let answerCycle = 0;
+  let previousExpressions = new Set();
+  let startedThisRound = false;
+  // Relaxed is the default to make the opening questions easier to react to.
+  let speedMode = 'relaxed';
+  const SPEED_SETTINGS = {
+    relaxed: { min: 55, max: 70, stageBoosts: [0, 8, 16, 24], label: 'Relaxed · Recommended' },
+    normal:  { min: 72, max: 90, stageBoosts: [0, 10, 20, 30], label: 'Normal' },
+    fast:    { min: 94, max: 116, stageBoosts: [0, 14, 28, 42], label: 'Fast' }
+  };
+
+  const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
+  const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+  const rand = (min, max) => Math.random() * (max - min) + min;
+  const choice = arr => arr[Math.floor(Math.random() * arr.length)];
+  const shuffled = arr => {
+    const out = arr.slice();
+    for (let i = out.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [out[i], out[j]] = [out[j], out[i]];
+    }
+    return out;
+  };
+  const pad2 = n => String(n).padStart(2, '0');
+
+  function stageFor(questionNumber) {
+    if (questionNumber <= 5) return 'EASY';
+    if (questionNumber <= 10) return 'MEDIUM';
+    if (questionNumber <= 15) return 'HARD';
+    return 'BONUS';
+  }
+
+  function buildQuestion(n) {
+    const stage = stageFor(n);
+    let a, b, c, d, divisor, quotient, text, answer;
+    if (stage === 'EASY') {
+      if (Math.random() < .52) {
+        a = randInt(3, 16); b = randInt(2, 15);
+        text = `${a} + ${b} = ?`; answer = a + b;
+      } else {
+        a = randInt(10, 26); b = randInt(1, a - 2);
+        text = `${a} − ${b} = ?`; answer = a - b;
+      }
+    } else if (stage === 'MEDIUM') {
+      if (Math.random() < .62) {
+        a = randInt(3, 12); b = randInt(3, 12);
+        text = `${a} × ${b} = ?`; answer = a * b;
+      } else {
+        divisor = randInt(2, 12); quotient = randInt(2, 12);
+        text = `${divisor * quotient} ÷ ${divisor} = ?`; answer = quotient;
+      }
+    } else if (stage === 'HARD') {
+      const kind = randInt(0, 3);
+      if (kind === 0) {
+        a = randInt(5, 12); b = randInt(3, 9); c = randInt(2, Math.min(22, a * b - 1));
+        text = `${a} × ${b} − ${c} = ?`; answer = a * b - c;
+      } else if (kind === 1) {
+        a = randInt(8, 24); b = randInt(2, 9); c = randInt(3, 9);
+        text = `${a} + ${b} × ${c} = ?`; answer = a + b * c;
+      } else if (kind === 2) {
+        divisor = randInt(3, 12); quotient = randInt(4, 15); c = randInt(3, 18);
+        text = `${divisor * quotient} ÷ ${divisor} + ${c} = ?`; answer = quotient + c;
+      } else {
+        a = randInt(4, 12); b = randInt(3, 9); c = randInt(4, 25);
+        text = `${a} × ${b} + ${c} = ?`; answer = a * b + c;
+      }
+    } else {
+      const kind = randInt(0, 4);
+      if (kind === 0) {
+        a = randInt(8, 16); b = randInt(5, 12); c = randInt(8, Math.min(38, a * b - 1));
+        text = `${a} × ${b} − ${c} = ?`; answer = a * b - c;
+      } else if (kind === 1) {
+        a = randInt(10, 38); b = randInt(4, 12); c = randInt(4, 12); d = randInt(3, 19);
+        text = `${a} + ${b} × ${c} − ${d} = ?`; answer = a + b * c - d;
+      } else if (kind === 2) {
+        a = randInt(4, 12); b = randInt(4, 12); c = randInt(3, 9); d = randInt(3, 9);
+        text = `${a} × ${b} + ${c} × ${d} = ?`; answer = a * b + c * d;
+      } else if (kind === 3) {
+        divisor = randInt(4, 12); quotient = randInt(8, 18); c = randInt(15, 45);
+        text = `${divisor * quotient} ÷ ${divisor} + ${c} = ?`; answer = quotient + c;
+      } else {
+        a = randInt(7, 15); b = randInt(5, 12); c = randInt(2, Math.min(9, b));
+        const product = a * b;
+        // A guaranteed exact division keeps the expression integer-based.
+        text = `${product} ÷ ${c} = ?`;
+        if (product % c !== 0) {
+          const cleanB = c * randInt(2, 8);
+          text = `${a * cleanB} ÷ ${c} = ?`; answer = a * cleanB / c;
+        } else answer = product / c;
+      }
+    }
+    return { number: n, stage, text, answer, key: text.replace(/\s/g, '') };
+  }
+
+  function makeQuestionSet() {
+    const list = [];
+    const used = new Set();
+    for (let n = 1; n <= MAX_QUESTIONS; n++) {
+      let item = null;
+      for (let attempt = 0; attempt < 600; attempt++) {
+        const candidate = buildQuestion(n);
+        if (!used.has(candidate.key)) { item = candidate; break; }
+      }
+      // This fallback is deliberately simple and still distinct if random generation ever collides too often.
+      if (!item) {
+        let k = n + 100;
+        do {
+          item = { number: n, stage: stageFor(n), text: `${k} + ${n} = ?`, answer: k + n, key: `${k}+${n}` };
+          k++;
+        } while (used.has(item.key));
+      }
+      used.add(item.key);
+      list.push(item);
+    }
+    return list;
+  }
+
+  function makeDistractors(correct) {
+    const offsets = shuffled([-13, -11, -9, -7, -5, -4, -3, -2, -1, 1, 2, 3, 4, 5, 7, 9, 11, 13, 15, -15]);
+    const values = new Set();
+    for (const offset of offsets) {
+      const candidate = correct + offset;
+      if (candidate >= 0 && candidate !== correct) values.add(candidate);
+      if (values.size === 5) break;
+    }
+    let delta = 17;
+    while (values.size < 5) {
+      const candidate = correct + delta;
+      if (candidate >= 0 && candidate !== correct) values.add(candidate);
+      delta += 2;
+    }
+    return shuffled([correct, ...values].map(value => ({ value, correct: value === correct })));
+  }
+
+  function objectRadius() { return clamp(width * .037, 17, 31); }
+  function laneCenters() {
+    const margin = Math.max(objectRadius() + 3, 27);
+    const usable = Math.max(1, width - margin * 2);
+    return Array.from({ length: 6 }, (_, i) => margin + usable * (i + .5) / 6);
+  }
+
+  function spawnAnswerWave() {
+    if (!activeQuestion || !width || !height) return;
+    const values = makeDistractors(activeQuestion.answer);
+    const centers = shuffled(laneCenters());
+    const stageIndex = activeQuestion.number <= 5 ? 0 : activeQuestion.number <= 10 ? 1 : activeQuestion.number <= 15 ? 2 : 3;
+    const speedSettings = SPEED_SETTINGS[speedMode] || SPEED_SETTINGS.relaxed;
+    const stageBoost = speedSettings.stageBoosts[stageIndex];
+    const minGap = Math.max(48, height * .07);
+    answers = values.map((item, i) => ({
+      value: item.value,
+      correct: item.correct,
+      x: centers[i],
+      y: -rand(7, 42) - i * 2,
+      r: objectRadius(),
+      speed: rand(speedSettings.min, speedSettings.max) + stageBoost,
+      phase: rand(0, Math.PI * 2),
+      passed: false
+    }));
+    // Keep horizontal columns distinct, and avoid stacked spawns in a single lane.
+    answers.forEach((a, i) => {
+      for (let j = 0; j < i; j++) {
+        if (Math.abs(a.x - answers[j].x) < a.r * 1.5) a.x = clamp(a.x + (i % 2 ? 1 : -1) * minGap * .45, a.r + 2, width - a.r - 2);
+      }
+    });
+    answerCycle++;
+  }
+
+  function setupQuestion() {
+    if (score >= MAX_QUESTIONS) { finishGame(true, 'perfect'); return; }
+    activeQuestion = questions[score];
+    player.x = clamp(player.x || width * .5, 24, width - 24);
+    player.y = clamp(player.y || height * .76, 28, height - 28);
+    questionText.textContent = activeQuestion.text;
+    questionKicker.textContent = `Question ${pad2(activeQuestion.number)} · ${activeQuestion.stage.toLowerCase()} stage`;
+    stageValue.textContent = activeQuestion.stage;
+    arenaStatus.textContent = 'Find the correct answer';
+    celebrationRibbon.hidden = true;
+    spawnAnswerWave();
+    updateHud();
+  }
+
+  function resetRound() {
+    score = 0;
+    remaining = ROUND_SECONDS;
+    questions = makeQuestionSet();
+    activeQuestion = null;
+    answers = [];
+    elapsed = 0;
+    answerCycle = 0;
+    celebrationTime = 0;
+    floatingFeedback = null;
+    player = { x: width / 2, y: height * .76, radius: 18, speed: 300, walkPhase: 0, lastDx: 1 };
+    keys.clear();
+    clearTouchButtons();
+    state = 'PLAYING';
+    startedThisRound = true;
+    startOverlay.hidden = true;
+    resultOverlay.hidden = true;
+    celebrationRibbon.hidden = true;
+    setupQuestion();
+    updateHud();
+    announcer.textContent = 'Game started. Catch the correct answer.';
+  }
+
+  function startGame() {
+    fitCanvas();
+    resetRound();
+    lastFrame = null;
+  }
+
+  function finishGame(won, reason) {
+    if (state === 'WON' || state === 'GAME_OVER' || state === 'START') return;
+    state = won ? 'WON' : 'GAME_OVER';
+    answers = [];
+    keys.clear();
+    clearTouchButtons();
+    celebrationRibbon.hidden = true;
+    resultOverlay.hidden = false;
+
+    const icon = document.getElementById('resultIcon');
+    const title = document.getElementById('resultTitle');
+    const eyebrow = document.getElementById('resultEyebrow');
+    const lead = document.getElementById('resultLead');
+    const message = document.getElementById('resultMessage');
+    icon.classList.toggle('loss', !won);
+    title.classList.toggle('loss', !won);
+    title.classList.toggle('win', won);
+    if (won) {
+      icon.textContent = '✦';
+      title.textContent = score === MAX_QUESTIONS ? 'PERFECT RUN!' : 'YOU DID IT!';
+      eyebrow.textContent = score === MAX_QUESTIONS ? '25 / 25 · flawless' : 'Victory · target reached';
+      lead.textContent = score === MAX_QUESTIONS ? 'Twenty-five correct catches. That was a seriously sharp run.' : 'You hit the goal. Great focus under pressure.';
+      message.textContent = reason === 'time' ? 'The clock ran out, but your score secured the win. Can you clear more questions next time?' : score === MAX_QUESTIONS ? 'You cleared every question. Take a victory lap, then try for another perfect run.' : 'You can keep building your score in another run. Bonus questions make every second count.';
+      announcer.textContent = `You won with a score of ${score} out of 25.`;
+    } else {
+      icon.textContent = '×';
+      title.textContent = reason === 'wrong' ? 'WRONG ANSWER' : "TIME'S UP";
+      eyebrow.textContent = reason === 'wrong' ? 'Run ended · risky catch' : 'Run ended · time limit';
+      lead.textContent = reason === 'wrong' ? 'That number looked tempting — but it was not the one.' : 'The clock reached zero before you reached the winning target.';
+      message.textContent = reason === 'wrong' ? 'Stay sharp, watch the equation, and try another run. One correct catch at a time.' : 'You need at least 15 correct answers to win. A fresh run gives you a new set of questions.';
+      announcer.textContent = reason === 'wrong' ? `Wrong answer. Game over with ${score} correct answers.` : `Time is up. You completed ${score} correct answers.`;
+    }
+    document.getElementById('finalScore').textContent = `${pad2(score)} / 25`;
+    document.getElementById('finalQuestions').textContent = pad2(score);
+    document.getElementById('finalTime').textContent = `${Math.max(0, remaining).toFixed(1)}s`;
+    updateHud();
+    restartButton.focus({ preventScroll: true });
+  }
+
+  function onCorrectCatch() {
+    if (state !== 'PLAYING' || !activeQuestion) return;
+    score = Math.min(MAX_QUESTIONS, score + 1);
+    floatingFeedback = { x: player.x, y: player.y - 28, time: .62 };
+    answers = [];
+    updateHud();
+    if (score >= MAX_QUESTIONS) {
+      finishGame(true, 'perfect');
+    } else if (score === WIN_TARGET) {
+      state = 'CELEBRATION';
+      celebrationTime = 1.65;
+      celebrationRibbon.hidden = false;
+      questionKicker.textContent = 'Target reached · bonus unlocked';
+      questionText.textContent = '15 QUESTIONS CLEARED!';
+      arenaStatus.textContent = 'Bonus stage unlocked';
+      stageValue.textContent = 'BONUS';
+      announcer.textContent = '15 questions cleared. Bonus stage unlocked. Keep going!';
+    } else {
+      setupQuestion();
+      announcer.textContent = `Correct! Score ${score}. Next question.`;
+    }
+  }
+
+  function updateHud() {
+    scoreValue.textContent = pad2(score);
+    questionValue.textContent = pad2(Math.min(MAX_QUESTIONS, score + 1));
+    if (state !== 'CELEBRATION' && activeQuestion) stageValue.textContent = activeQuestion.stage;
+    timeValue.textContent = Math.max(0, remaining).toFixed(1);
+    timerFill.style.width = `${clamp(remaining / ROUND_SECONDS * 100, 0, 100)}%`;
+    timerFill.classList.toggle('warning', remaining <= 12);
+    progressDots.innerHTML = '';
+    for (let i = 1; i <= MAX_QUESTIONS; i++) {
+      const dot = document.createElement('span');
+      if (i <= score) dot.className = i > WIN_TARGET ? 'bonus' : 'done';
+      dot.setAttribute('aria-hidden', 'true');
+      progressDots.appendChild(dot);
+    }
+    progressDots.setAttribute('aria-label', `${score} of ${MAX_QUESTIONS} questions completed`);
+  }
+
+  function clearTouchButtons() {
+    touchButtons.clear();
+    document.querySelectorAll('.touch-btn').forEach(btn => btn.classList.remove('pressed'));
+  }
+
+  function setKey(key, on) {
+    if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key)) return;
+    if (on) keys.add(key); else keys.delete(key);
+  }
+
+  function resizePlayerAndAnswers() {
+    if (!width || !height) return;
+    player.x = clamp(player.x || width * .5, 18, width - 18);
+    player.y = clamp(player.y || height * .76, 24, height - 24);
+    const r = objectRadius();
+    for (const a of answers) {
+      a.r = r;
+      a.x = clamp(a.x, r + 2, width - r - 2);
+    }
+  }
+
+  function fitCanvas() {
+    const rect = canvas.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    const oldW = width;
+    const oldH = height;
+    width = rect.width;
+    height = rect.height;
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.round(width * dpr);
+    canvas.height = Math.round(height * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (oldW > 0 && oldH > 0) {
+      const sx = width / oldW;
+      const sy = height / oldH;
+      player.x *= sx;
+      player.y *= sy;
+      answers.forEach(a => { a.x *= sx; a.y *= sy; });
+      if (floatingFeedback) { floatingFeedback.x *= sx; floatingFeedback.y *= sy; }
+    } else {
+      player.x = width / 2;
+      player.y = height * .76;
+    }
+    resizePlayerAndAnswers();
+    if (state === 'PLAYING' && answers.length === 0 && activeQuestion) spawnAnswerWave();
+  }
+
+  function update(dt, clockDt = dt) {
+    if (state !== 'PLAYING' && state !== 'CELEBRATION') return;
+    elapsed += clockDt;
+    remaining = Math.max(0, remaining - clockDt);
+    if (floatingFeedback) {
+      floatingFeedback.time -= dt;
+      floatingFeedback.y -= dt * 24;
+      if (floatingFeedback.time <= 0) floatingFeedback = null;
+    }
+    if (remaining <= 0) {
+      finishGame(score >= WIN_TARGET, 'time');
+      return;
+    }
+    if (state === 'CELEBRATION') {
+      celebrationTime -= clockDt;
+      if (celebrationTime <= 0) {
+        state = 'PLAYING';
+        celebrationRibbon.hidden = true;
+        setupQuestion();
+        announcer.textContent = 'Bonus question 16. Keep going.';
+      }
+      updateHud();
+      return;
+    }
+
+    let dx = (keys.has('ArrowRight') ? 1 : 0) - (keys.has('ArrowLeft') ? 1 : 0);
+    let dy = (keys.has('ArrowDown') ? 1 : 0) - (keys.has('ArrowUp') ? 1 : 0);
+    if (dx && dy) { dx *= Math.SQRT1_2; dy *= Math.SQRT1_2; }
+    if (dx) player.lastDx = dx;
+    player.x = clamp(player.x + dx * player.speed * dt, 19, width - 19);
+    player.y = clamp(player.y + dy * player.speed * dt, 30, height - 29);
+    if (dx || dy) player.walkPhase += dt * 13;
+
+    for (let i = answers.length - 1; i >= 0; i--) {
+      const a = answers[i];
+      a.y += a.speed * dt;
+      a.phase += dt * 2;
+      if (collidesWithPlayer(a)) {
+        if (a.correct) onCorrectCatch(); else finishGame(false, 'wrong');
+        return;
+      }
+      if (a.y - 20 > height) answers.splice(i, 1);
+    }
+    // If every answer was missed, recycle the same question in a fresh arrangement.
+    // This prevents an uncaught correct value from making a question impossible.
+    if (answers.length === 0 && state === 'PLAYING') spawnAnswerWave();
+    updateHud();
+  }
+
+  function collidesWithPlayer(a) {
+    const pw = 25, ph = 40;
+    const left = player.x - pw / 2;
+    const right = player.x + pw / 2;
+    const top = player.y - ph / 2;
+    const bottom = player.y + ph / 2;
+    const nearestX = clamp(a.x, left, right);
+    const nearestY = clamp(a.y, top, bottom);
+    const rx = a.r * 1.1;
+    const ry = a.r * .78;
+    return ((nearestX - a.x) ** 2) / (rx * rx) + ((nearestY - a.y) ** 2) / (ry * ry) <= 1;
+  }
+
+  function roundRect(c, x, y, w, h, r) {
+    const radius = Math.min(r, w / 2, h / 2);
+    c.beginPath();
+    c.moveTo(x + radius, y);
+    c.arcTo(x + w, y, x + w, y + h, radius);
+    c.arcTo(x + w, y + h, x, y + h, radius);
+    c.arcTo(x, y + h, x, y, radius);
+    c.arcTo(x, y, x + w, y, radius);
+    c.closePath();
+  }
+
+  function drawBackground(t) {
+    ctx.clearRect(0, 0, width, height);
+    const gradient = ctx.createLinearGradient(0, 0, width, height);
+    gradient.addColorStop(0, '#0b1329');
+    gradient.addColorStop(.58, '#091021');
+    gradient.addColorStop(1, '#0d1228');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, width, height);
+
+    // Subtle, slow-moving decorative light fields.
+    const glow1 = ctx.createRadialGradient(width * .17, height * .15, 0, width * .17, height * .15, width * .55);
+    glow1.addColorStop(0, 'rgba(70, 93, 190, .13)'); glow1.addColorStop(1, 'rgba(70, 93, 190, 0)');
+    ctx.fillStyle = glow1; ctx.fillRect(0, 0, width, height);
+    const glow2 = ctx.createRadialGradient(width * .87, height * .7, 0, width * .87, height * .7, width * .4);
+    glow2.addColorStop(0, 'rgba(40, 204, 214, .065)'); glow2.addColorStop(1, 'rgba(40, 204, 214, 0)');
+    ctx.fillStyle = glow2; ctx.fillRect(0, 0, width, height);
+
+    ctx.save();
+    ctx.strokeStyle = 'rgba(132, 163, 220, .045)'; ctx.lineWidth = 1;
+    const grid = 38;
+    const shift = (t * 7) % grid;
+    for (let x = 0; x <= width; x += grid) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, height); ctx.stroke(); }
+    for (let y = -grid + shift; y <= height; y += grid) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke(); }
+    for (const star of backgroundStars) {
+      const pulse = .26 + .28 * (Math.sin(t * star.speed + star.phase) + 1) / 2;
+      ctx.fillStyle = `rgba(183, 213, 255, ${pulse})`;
+      ctx.beginPath(); ctx.arc(star.x * width, star.y * height, star.r, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
+
+    // Edge rails keep the catch area visually legible.
+    ctx.strokeStyle = 'rgba(84,243,255,.14)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(1, 0); ctx.lineTo(1, height); ctx.moveTo(width - 1, 0); ctx.lineTo(width - 1, height); ctx.stroke();
+  }
+
+  function drawAnswer(a, t) {
+    const r = a.r;
+    const w = r * 2.05;
+    const h = r * 1.34;
+    const x = a.x - w / 2;
+    const y = a.y - h / 2;
+    // The correct and incorrect objects intentionally share every visual style.
+    ctx.save();
+    ctx.shadowColor = 'rgba(91, 175, 237, .16)';
+    ctx.shadowBlur = 9;
+    roundRect(ctx, x, y, w, h, 11);
+    const fill = ctx.createLinearGradient(x, y, x + w, y + h);
+    fill.addColorStop(0, 'rgba(38, 54, 87, .98)');
+    fill.addColorStop(1, 'rgba(22, 34, 62, .98)');
+    ctx.fillStyle = fill; ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = 'rgba(135, 194, 244, .49)'; ctx.lineWidth = 1.2; ctx.stroke();
+    ctx.fillStyle = '#f5f8ff';
+    ctx.font = `750 ${clamp(r * .67, 15, 21)}px ui-sans-serif, system-ui, sans-serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(String(a.value), a.x, a.y + .5, w - 8);
+    // tiny identical glint
+    ctx.strokeStyle = 'rgba(215,238,255,.14)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x + 11, y + 5); ctx.lineTo(x + w - 11, y + 5); ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawBoy(t) {
+    const x = player.x, y = player.y;
+    const moving = keys.size > 0 && state === 'PLAYING';
+    const step = moving ? Math.sin(player.walkPhase) * 3.3 : Math.sin(t * 2.2) * .8;
+    ctx.save();
+    // Soft ground shadow
+    ctx.fillStyle = 'rgba(0,0,0,.3)';
+    ctx.beginPath(); ctx.ellipse(x, y + 22, 19, 6, 0, 0, Math.PI * 2); ctx.fill();
+    // Legs and shoes
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = '#6b86cb'; ctx.lineWidth = 7;
+    ctx.beginPath(); ctx.moveTo(x - 6, y + 8); ctx.lineTo(x - 7 + step, y + 19); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x + 6, y + 8); ctx.lineTo(x + 7 - step, y + 19); ctx.stroke();
+    ctx.strokeStyle = '#e9f3ff'; ctx.lineWidth = 5;
+    ctx.beginPath(); ctx.moveTo(x - 8 + step, y + 20); ctx.lineTo(x - 3 + step, y + 20); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x + 5 - step, y + 20); ctx.lineTo(x + 10 - step, y + 20); ctx.stroke();
+    // Backpack peeking out
+    roundRect(ctx, x - 15, y - 7, 7, 17, 4); ctx.fillStyle = '#9a79ff'; ctx.fill();
+    // Body
+    ctx.shadowColor = 'rgba(84,243,255,.22)'; ctx.shadowBlur = 12;
+    roundRect(ctx, x - 12, y - 9, 24, 21, 8);
+    const body = ctx.createLinearGradient(x - 12, y - 9, x + 12, y + 12);
+    body.addColorStop(0, '#5ef1f0'); body.addColorStop(1, '#278cbb');
+    ctx.fillStyle = body; ctx.fill(); ctx.shadowBlur = 0;
+    // Arms
+    ctx.strokeStyle = '#f3c39d'; ctx.lineWidth = 5.5;
+    ctx.beginPath(); ctx.moveTo(x - 10, y - 3); ctx.lineTo(x - 15, y + 6 + step * .35); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x + 10, y - 3); ctx.lineTo(x + 15, y + 6 - step * .35); ctx.stroke();
+    // Neck and face
+    ctx.fillStyle = '#d99368'; ctx.fillRect(x - 4, y - 15, 8, 8);
+    ctx.fillStyle = '#f0bd91'; ctx.beginPath(); ctx.arc(x, y - 19, 12.3, 0, Math.PI * 2); ctx.fill();
+    // Ears
+    ctx.beginPath(); ctx.arc(x - 11.5, y - 18, 3.1, 0, Math.PI * 2); ctx.arc(x + 11.5, y - 18, 3.1, 0, Math.PI * 2); ctx.fill();
+    // Hair silhouette and fringe
+    ctx.fillStyle = '#20233c';
+    ctx.beginPath(); ctx.arc(x, y - 22, 12.8, Math.PI, Math.PI * 2); ctx.lineTo(x + 12, y - 19); ctx.quadraticCurveTo(x + 8, y - 25, x + 4, y - 22); ctx.quadraticCurveTo(x, y - 27, x - 4, y - 21); ctx.quadraticCurveTo(x - 8, y - 25, x - 12, y - 18); ctx.closePath(); ctx.fill();
+    // Face details
+    ctx.fillStyle = '#28334e';
+    ctx.beginPath(); ctx.arc(x - 4.2, y - 18.5, 1.3, 0, Math.PI * 2); ctx.arc(x + 4.2, y - 18.5, 1.3, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#a9574e'; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.arc(x, y - 15.5, 3, .15, Math.PI - .15); ctx.stroke();
+    // Collar accent
+    ctx.strokeStyle = 'rgba(255,255,255,.75)'; ctx.lineWidth = 1.3;
+    ctx.beginPath(); ctx.moveTo(x - 3, y - 6); ctx.lineTo(x, y - 2); ctx.lineTo(x + 3, y - 6); ctx.stroke();
+    // Movement ring to help judge the hitbox
+    ctx.strokeStyle = 'rgba(84,243,255,.25)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.ellipse(x, y + 1, 20, 28, 0, 0, Math.PI * 2); ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawFeedback() {
+    if (!floatingFeedback) return;
+    const alpha = clamp(floatingFeedback.time / .62, 0, 1);
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = '#70f6c3'; ctx.shadowColor = '#70f6c3'; ctx.shadowBlur = 14;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = '900 23px ui-sans-serif, system-ui, sans-serif';
+    ctx.fillText('+1', floatingFeedback.x, floatingFeedback.y);
+    ctx.restore();
+  }
+
+  function drawIdleHint() {
+    if (state !== 'START') return;
+    ctx.save();
+    ctx.textAlign = 'center';
+    ctx.fillStyle = 'rgba(185,203,237,.76)';
+    ctx.font = '700 11px ui-sans-serif, system-ui, sans-serif';
+    ctx.fillText('YOUR RUN STARTS WHEN YOU ARE READY', width / 2, height * .56);
+    ctx.fillStyle = 'rgba(132,151,194,.62)';
+    ctx.font = '11px ui-sans-serif, system-ui, sans-serif';
+    ctx.fillText('Six numbers · One answer · Sixty seconds', width / 2, height * .56 + 22);
+    ctx.restore();
+  }
+
+  function render(t) {
+    drawBackground(t);
+    if (state === 'START') {
+      drawIdleHint();
+      return;
+    }
+    for (const a of answers) drawAnswer(a, t);
+    drawBoy(t);
+    drawFeedback();
+    if (state === 'CELEBRATION') {
+      ctx.save();
+      const pulse = .07 + .04 * Math.sin(t * 9);
+      ctx.fillStyle = `rgba(112,246,195,${pulse})`;
+      ctx.fillRect(0, 0, width, height);
+      ctx.restore();
+    }
+  }
+
+  function frame(now) {
+    if (document.hidden) {
+      lastFrame = null;
+      render(now / 1000);
+      requestAnimationFrame(frame);
+      return;
+    }
+    const clockDt = lastFrame === null ? 0 : Math.max(0, (now - lastFrame) / 1000);
+    const dt = Math.min(clockDt, .045);
+    lastFrame = now;
+    if (clockDt > 0) update(dt, clockDt);
+    render(now / 1000);
+    requestAnimationFrame(frame);
+  }
+
+  document.addEventListener('keydown', event => {
+    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) {
+      if (state === 'PLAYING' || state === 'CELEBRATION') event.preventDefault();
+      if (state === 'PLAYING') setKey(event.key, true);
+    }
+  }, { passive: false });
+  document.addEventListener('keyup', event => setKey(event.key, false));
+  window.addEventListener('blur', () => { keys.clear(); clearTouchButtons(); });
+  document.addEventListener('visibilitychange', () => {
+    keys.clear(); clearTouchButtons();
+    lastFrame = null;
+    if (!document.hidden && state === 'PLAYING') arenaStatus.textContent = 'Find the correct answer';
+  });
+
+  document.querySelectorAll('.touch-btn').forEach(button => {
+    const key = button.dataset.key;
+    const startPress = event => {
+      event.preventDefault();
+      if (state !== 'PLAYING') return;
+      setKey(key, true);
+      touchButtons.set(button, key);
+      button.classList.add('pressed');
+      try { button.setPointerCapture(event.pointerId); } catch (_) {}
+    };
+    const endPress = event => {
+      if (event) event.preventDefault();
+      setKey(key, false);
+      touchButtons.delete(button);
+      button.classList.remove('pressed');
+    };
+    button.addEventListener('pointerdown', startPress);
+    button.addEventListener('pointerup', endPress);
+    button.addEventListener('pointercancel', endPress);
+    button.addEventListener('lostpointercapture', endPress);
+    button.addEventListener('contextmenu', e => e.preventDefault());
+  });
+
+  speedModeButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      speedMode = button.dataset.speedMode in SPEED_SETTINGS ? button.dataset.speedMode : 'relaxed';
+      speedModeButtons.forEach(option => option.setAttribute('aria-pressed', String(option === button)));
+      speedModeLabel.textContent = SPEED_SETTINGS[speedMode].label;
+      announcer.textContent = `Falling speed set to ${speedMode}.`;
+    });
+  });
+
+  startButton.addEventListener('click', startGame);
+  restartButton.addEventListener('click', startGame);
+  window.addEventListener('resize', fitCanvas, { passive: true });
+
+  // Keep keyboard input clean when users tap controls or navigate the overlays.
+  document.addEventListener('pointerdown', event => {
+    if (event.target.closest('button') && !event.target.classList.contains('touch-btn')) {
+      keys.clear();
+      clearTouchButtons();
+    }
+  });
+
+  fitCanvas();
+  updateHud();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
