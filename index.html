@@ -910,6 +910,118 @@ footer{
     }
 }
 </style>
+    <style>
+
+/* Featured Projects — easy to find near the top of the portfolio */
+.featured-work {
+  padding: 55px 20px;
+  margin: 25px auto;
+  max-width: 1050px;
+  scroll-margin-top: 90px;
+}
+
+.featured-work-header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.featured-work-label {
+  color: #42bdb0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+.featured-work h2 {
+  font-size: clamp(27px, 4vw, 38px);
+  margin: 10px 0;
+}
+
+.featured-work-description {
+  max-width: 580px;
+  margin: 0 auto;
+  line-height: 1.7;
+  opacity: 0.75;
+}
+
+.featured-work-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.featured-work-card {
+  padding: 27px;
+  border: 1px solid rgba(128, 160, 175, 0.35);
+  border-radius: 14px;
+  background: rgba(120, 150, 170, 0.06);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.featured-work-card:hover {
+  transform: translateY(-4px);
+  border-color: #42bdb0;
+}
+
+.featured-work-icon {
+  font-size: 32px;
+  margin-bottom: 15px;
+}
+
+.featured-work-card h3 {
+  font-size: 21px;
+  margin: 0 0 10px;
+}
+
+.featured-work-card p {
+  line-height: 1.7;
+  opacity: 0.8;
+  flex-grow: 1;
+  margin: 0 0 22px;
+}
+
+.featured-work-link {
+  display: inline-block;
+  padding: 12px 17px;
+  color: #071c20;
+  background: #72d9ce;
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 800;
+  transition: background 0.2s ease;
+}
+
+.featured-work-link:hover {
+  background: #a0f5eb;
+}
+
+.featured-work-link:focus-visible {
+  outline: 3px solid currentColor;
+  outline-offset: 4px;
+}
+
+@media (max-width: 620px) {
+  .featured-work {
+    padding: 35px 14px;
+  }
+
+  .featured-work-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .featured-work-card {
+    padding: 22px;
+  }
+}
+
+</style>
+
+</head>
 </head>
 
 <body>
@@ -988,6 +1100,63 @@ footer{
     </div>
 
 </div>
+
+<!-- FEATURED PROJECTS -->
+<section id="featured-work" class="featured-work"
+         aria-labelledby="featured-work-title">
+
+  <div class="featured-work-header">
+    <div class="featured-work-label">Explore My Work</div>
+    <h2 id="featured-work-title">Featured Projects</h2>
+    <p class="featured-work-description">
+      Explore my game development project and the document
+      I created for this assignment.
+    </p>
+  </div>
+
+  <div class="featured-work-grid">
+
+    <!-- PROJECT 1: LIGHT OUT GAME -->
+    <article class="featured-work-card">
+      <div class="featured-work-icon" aria-hidden="true">🎮</div>
+
+      <h3>LIGHT OUT — Survival Arcade</h3>
+
+      <p>
+        An original pixel-art survival game where a boy must escape
+        zombies, survive sudden blackouts, and find his way home
+        through ten increasingly difficult rounds.
+      </p>
+
+      <a class="featured-work-link"
+         href="light_out.html"
+         target="_blank"
+         rel="noopener noreferrer">
+        Play the Game ↗
+      </a>
+    </article>
+
+    <!-- PROJECT 2: GOOGLE DOCUMENT -->
+    <article class="featured-work-card">
+      <div class="featured-work-icon" aria-hidden="true">📄</div>
+
+      <h3>LIGHT OUT — Assignment Document</h3>
+
+      <p>
+        View my Google Document prepared for this assignment,
+        including the project information and supporting work.
+      </p>
+
+      <a class="featured-work-link"
+         href="https://docs.google.com/document/d/1KrZw-cZOXs6OJjc0gA8i0bq9qmpScZq8XHOy-Tp8G3c/edit?usp=sharing"
+         target="_blank"
+         rel="noopener noreferrer">
+        View Google Document ↗
+      </a>
+    </article>
+
+  </div>
+</section>
 
 </section>
 
@@ -1404,24 +1573,7 @@ footer{
 
 </footer>
 
-<section style="max-width: 800px; margin: 40px auto; padding: 24px; text-align: center; border-radius: 16px; background: #fdf1f5; color: #333;">
-  <h2>My Projects</h2>
-  <h3>MIND RUSH — Week 6 Assignment</h3>
-  <p>A fast-paced math arcade game.</p>
-
-   <!-- Add this section inside your portfolio index.html where appropriate -->
-<section>
-  <h2>Mind Rush Game Project</h2>
-  <p>Check out my math arcade game and project documentation:</p>
-  <ul>
-    <!-- Link to your game file in the repository -->
-    <li><a href="mind-rush.html" target="_blank">Play Mind Rush Game</a></li>
-    <!-- Link to your Google Document -->
-    <li><a href="https://docs.google.com/document/d/1KrZw-cZOXs6OJjc0gA8i0bq9qmpScZq8XHOy-Tp8G3c/edit?usp=sharing" target="_blank">View Project Google Doc</a></li>
-
-  </ul>
-</section>
-
+ 
    
 
 </body>
